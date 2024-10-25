@@ -1,0 +1,11 @@
+build
+node_modules
+
+.env
+
+.npmrc
+.idea
+.vscode
+*.log
+.yarn/*
+!.yarn/releases
