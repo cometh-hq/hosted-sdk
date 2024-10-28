@@ -3,7 +3,7 @@ import type { EmbeddedConfiguration } from '@/core/app/embedded'
 import embeddedFactory from '@/core/app/factory'
 import { DisplayMode } from '@/configuration'
 import {
-    type ConnectedWallet,
+    type Wallet,
     type EventRequestDTO,
     EventType,
     type ResponseRequestAccountsDTO,
@@ -15,15 +15,15 @@ import type { ConnectParameters, Hex } from '@/types'
 
 export default class DisplayableWallet {
     protected storage = new WalletStorage()
-    private _embedded: Embedded
+    private embedded: Embedded
 
     constructor(display: DisplayMode, config: EmbeddedConfiguration, private defaultChain: number, private hidden: boolean = false) {
-        this._embedded = embeddedFactory(display, config)
-        this._embedded.initialize()
+        this.embedded = embeddedFactory(display, config)
+        this.embedded.initialize()
     }
 
     private async _openDisplay(parameters?: ConnectParameters): Promise<void> {
-        const reload = this._embedded.open(undefined, {
+        const reload = this.embedded.open(undefined, {
             chain_id: parameters?.chainIds?.[0]?.toString()
         }, !this.hidden)
         if (reload) {
@@ -32,16 +32,16 @@ export default class DisplayableWallet {
     }
 
     protected _closeDisplay() {
-        this._embedded.close()
+        this.embedded.close()
     }
 
-    async connect(parameters?: ConnectParameters): Promise<ConnectedWallet> {
+    async connect(parameters?: ConnectParameters): Promise<Wallet> {
         await this._openDisplay(parameters)
         const walletInfoPromise = this.waitActionResponse<ResponseRequestAccountsDTO>(
             EventType.REQUEST_ACCOUNTS,
             false
         )
-        this._embedded.sendMessage({
+        this.embedded.sendMessage({
             client: this.getClient(),
             type: EventType.REQUEST_ACCOUNTS,
             chainId: this.getChainId(),
@@ -68,21 +68,21 @@ export default class DisplayableWallet {
     }
 
     disconnect() {
-        this._embedded.close()
+        this.embedded.close()
         this.storage.clear()
     }
 
-    async triggerAction(message: EventRequestDTO) {
+    protected async triggerAction(message: EventRequestDTO) {
         await this._openDisplay()
-        this._embedded.sendMessage(message)
+        this.embedded.sendMessage(message)
     }
 
-    async waitActionResponse<T>(
+    protected async waitActionResponse<T>(
         type: EventType,
         closeOnSuccess: boolean = true
     ): Promise<T> {
         try {
-            const result = await this._embedded.waitMessage<T>(type)
+            const result = await this.embedded.waitMessage<T>(type)
             if (closeOnSuccess) {
                 this._closeDisplay()
             }

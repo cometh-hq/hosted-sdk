@@ -3,7 +3,7 @@ import type { KeyValueStorage } from '@/utils/storage/types'
 import type {Hex} from "@/types";
 
 export class WalletStorage {
-	private storage: KeyValueStorage = new LocalStorage('wallet')
+	private storage: KeyValueStorage = new LocalStorage('hosted-wallet')
 
 	getAddress(): Hex | null {
 		return this.storage.getItem('address') as Hex | null

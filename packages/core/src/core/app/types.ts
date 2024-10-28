@@ -1,5 +1,23 @@
 import type {Address, Hash, MetaTransaction} from '@/types'
 
+export interface Profile {
+	email: string
+	token: OAuthToken
+}
+
+export interface Wallet {
+	address: Address
+	chainId: number
+}
+
+export interface OAuthToken {
+	access_token: string
+	expires_in: number
+	id_token: string
+	scope: string
+	token_type: string
+}
+
 /** MESSAGES **/
 
 export interface RequestSignMessageDTO {
@@ -27,11 +45,6 @@ export interface ResponseRequestAccountsDTO {
 	chainIds: number[]
 	currentAccount: Address
 	accounts: Address[]
-}
-
-export interface ConnectedWallet {
-	address: Address
-	chainId: number
 }
 
 export interface ResponseOAuthTokenRedirectDTO {

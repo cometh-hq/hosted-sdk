@@ -16,7 +16,10 @@
     "build": "tsup --splitting",
     "clean": "rm -rf dist"
   },
-  "dependencies": {},
+  "dependencies": {
+    "axios": "^1.7.7",
+    "pkce-challenge": "^4.1.0"
+  },
   "devDependencies": {
     "tsup": "^8.0.2",
     "typescript": "^5.4.3"

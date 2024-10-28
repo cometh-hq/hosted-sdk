@@ -1,7 +1,6 @@
 import {DisplayMode, type WalletConfiguration} from '@/configuration'
 import {safeURL} from '@/utils/safeURLBuilder'
 import {
-    type ConnectedWallet,
     type EventRequestDTO,
     EventType,
     type ResponseSendTransactionDTO,
@@ -12,21 +11,18 @@ import DisplayableWallet from '@/core/app/DisplayableWallet'
 import type {
     Address,
     ByteArray,
-    ConnectParameters,
     Hex,
     MetaTransaction,
     SendTransactionResponse,
     SignableMessage
 } from '@/types'
 
-export default class HostedWallet {
-    wallet: DisplayableWallet
-    auth: DisplayableWallet
+export default class HostedWallet extends DisplayableWallet {
 
     constructor(apiKey: string, configuration: WalletConfiguration, appChainIds: number[]) {
         const oidcURI = new URL(configuration.oidcURI || OIDC_URI)
         const oidcAppURI = configuration.oidcAppURI || OIDC_APP_URI
-        this.wallet = new DisplayableWallet(
+        super(
             DisplayMode.IFRAME,
             {
                 authorizedOrigin: oidcURI.origin,
@@ -37,36 +33,17 @@ export default class HostedWallet {
             appChainIds.length > 0 ? appChainIds[0] : 1,
             true
         )
-        this.auth = new DisplayableWallet(
-            DisplayMode.POPUP,
-            {
-                authorizedOrigin: oidcURI.origin,
-                defaultURL: safeURL(oidcAppURI, `/auth?client_id=${apiKey}`),
-                allowCreatePasskey: true,
-                allowGetPasskey: true
-            },
-            appChainIds.length > 0 ? appChainIds[0] : 1
-        )
-    }
-
-    async connect(parameters?: ConnectParameters): Promise<ConnectedWallet> {
-        // TODO handle auth session
-        return this.wallet.connect(parameters)
-    }
-
-    disconnect() {
-        return this.wallet.disconnect()
     }
 
     async signMessage(message: SignableMessage): Promise<Hex> {
         const request: EventRequestDTO = {
             type: EventType.SIGN_MESSAGE,
             data: {message},
-            client: this.wallet.getClient(),
-            chainId: this.wallet.getChainId()
+            client: this.getClient(),
+            chainId: this.getChainId()
         }
-        await this.wallet.triggerAction(request)
-        const response = await this.wallet.waitActionResponse<ResponseSignMessageDTO>(
+        await this.triggerAction(request)
+        const response = await this.waitActionResponse<ResponseSignMessageDTO>(
             EventType.SIGN_MESSAGE
         )
         return response.signature
@@ -79,11 +56,11 @@ export default class HostedWallet {
         const request: EventRequestDTO = {
             type: EventType.SEND_TRANSACTION,
             data: {metaTransaction},
-            client: this.wallet.getClient(),
-            chainId: this.wallet.getChainId()
+            client: this.getClient(),
+            chainId: this.getChainId()
         }
-        await this.wallet.triggerAction(request)
-        return await this.wallet.waitActionResponse<ResponseSendTransactionDTO>(
+        await this.triggerAction(request)
+        return await this.waitActionResponse<ResponseSendTransactionDTO>(
             EventType.SEND_TRANSACTION,
             closeOnSuccess
         )
