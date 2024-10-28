@@ -10,7 +10,7 @@ export default class HostedWallet {
     wallet: DisplayableWallet
     auth: DisplayableAuth
 
-    constructor(apiKey: string, configuration: WalletConfiguration, appChainIds: number[]) {
+    constructor(apiKey: string, configuration: WalletConfiguration = {}, appChainIds: number[] = []) {
         const oidcURI = new URL(configuration.oidcURI || OIDC_URI)
         const oidcAppURI = configuration.oidcAppURI || OIDC_APP_URI
         this.wallet = new DisplayableWallet(
