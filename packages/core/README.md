@@ -9,7 +9,7 @@ npm install @cometh/hosted
 #### Initialize Wallet SDK
 
 ```typescript
-import { HostedWallet } from '@cometh/hosted'
+import { Hosted } from '@cometh/hosted'
 ```
 
 ## Authentication
@@ -18,13 +18,13 @@ This method is used to authenticate the user and get the OAuth token through an 
 A popup will be displayed to handle the authentication process.
 
 ```typescript
-const hosted = new HostedWallet(apiKey)
+const hosted = new Hosted(apiKey)
 
-// Login to Cometh OIDC and get a session token with its email / wallet
-const profile = await hosted.connect()
+// Login to Cometh OIDC and get its email / wallet
+const profile = await hosted.login()
 
 // Logout from Cometh OIDC
-await hosted.disconnect()
+await hosted.logout()
 ```
 
 ## Smart Wallet
@@ -33,7 +33,7 @@ await hosted.disconnect()
 #### Get Address
 
 ```typescript
-hosted.getAddress()
+hosted.wallet.getAddress()
 ```
 
 This function returns the address of the wallet.
@@ -42,7 +42,7 @@ This function returns the address of the wallet.
 
 ```typescript
 const txParams = { to: DESTINATION, value: VALUE, data: DATA }
-const tx = await hosted.sendTransaction(txParams)
+const tx = await hosted.wallet.sendTransaction(txParams)
 ```
 
 This function relays the transaction data to the target address. The transaction fees can be sponsored. The function returns the safeTxHash of the transaction which can be used to wait for the Transaction receipt.
@@ -50,7 +50,7 @@ This function relays the transaction data to the target address. The transaction
 #### Sign Message
 
 ```typescript
-const signature = await hosted.signMessage('hello')
+const signature = await hosted.wallet.signMessage('hello')
 ```
 
 Sign the given message.
