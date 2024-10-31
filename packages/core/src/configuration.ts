@@ -4,6 +4,6 @@ export enum DisplayMode {
 }
 
 export interface WalletConfiguration {
-    oidcURI?: string
-    oidcAppURI?: string
+    oidcURL?: string
+    oidcAppURL?: string
 }

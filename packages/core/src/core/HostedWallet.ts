@@ -6,7 +6,7 @@ import {
     type ResponseSendTransactionDTO,
     type ResponseSignMessageDTO
 } from '@/core/app/types'
-import { OIDC_APP_URI, OIDC_URI } from '@/constants'
+import { OIDC_APP_URL, OIDC_URL } from '@/constants'
 import DisplayableWallet from '@/core/app/DisplayableWallet'
 import type {
     Address,
@@ -20,8 +20,8 @@ import type {
 export default class HostedWallet extends DisplayableWallet {
 
     constructor(apiKey: string, configuration: WalletConfiguration, appChainIds: number[]) {
-        const oidcURI = new URL(configuration.oidcURI || OIDC_URI)
-        const oidcAppURI = configuration.oidcAppURI || OIDC_APP_URI
+        const oidcURI = new URL(configuration.oidcURL || OIDC_URL)
+        const oidcAppURI = configuration.oidcAppURL || OIDC_APP_URL
         super(
             DisplayMode.IFRAME,
             {

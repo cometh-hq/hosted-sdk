@@ -1,8 +1,8 @@
-import HostedWallet from '@/core/HostedWallet'
+import Hosted from '@/core/Hosted'
 
 export * from './types'
 export * from './core/errors'
 
 export * from './configuration'
 
-export default HostedWallet
+export default Hosted

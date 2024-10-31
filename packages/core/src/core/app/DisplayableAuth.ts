@@ -1,21 +1,27 @@
 import type Embedded from '@/core/app/embedded'
-import type { EmbeddedConfiguration } from '@/core/app/embedded'
 import embeddedFactory from '@/core/app/factory'
 import { DisplayMode } from '@/configuration'
-import { EventType, type ResponseOAuthTokenRedirectDTO } from '@/core/app/types'
+import { EventType, type OAuthToken, type Profile, type ResponseOAuthTokenRedirectDTO } from '@/core/app/types'
 import { getFaviconUrl } from '@/utils/getFaviconUrl'
-import type { OAuthToken, Profile } from '@/types'
 import { AuthStorage } from '@/utils/storage/AuthStorage'
 import getPkce, { type PKCEChallenge } from '@/utils/pkce'
 import OidcAPI from '@/core/apis/oidcAPI/oidcAPI'
+import { safeURL } from '@/utils/safeURLBuilder'
 
 export default class DisplayableAuth {
     protected storage = new AuthStorage()
     private embedded: Embedded
     private oidcAPI: OidcAPI
 
-    constructor(apiKey: string, oidcAppUrl: string, oidcApiUrl: string, display: DisplayMode, config: EmbeddedConfiguration) {
-        this.embedded = embeddedFactory(display, config)
+    constructor(apiKey: string, oidcApiUrl: string, oidcAppUrl: string, display: DisplayMode) {
+        const oidcURL = new URL(oidcApiUrl)
+        this.embedded = embeddedFactory(display,
+            {
+                authorizedOrigin: oidcURL.origin,
+                defaultURL: safeURL(oidcApiUrl, `/auth?client_id=${apiKey}`),
+                allowCreatePasskey: true,
+                allowGetPasskey: true
+            })
         this.embedded.initialize()
         this.oidcAPI = new OidcAPI(apiKey, oidcApiUrl, oidcAppUrl)
     }
@@ -60,13 +66,19 @@ export default class DisplayableAuth {
     }
 
     async login(): Promise<Profile> {
+        if (this.isAuthenticated()) {
+            const profile = this.getProfile()
+            if (profile) {
+                return profile
+            }
+        }
         const pkce = await getPkce()
         await this._redirectToLogin(pkce)
         const result = await this.waitActionResponse<ResponseOAuthTokenRedirectDTO>(EventType.OAUTH_TOKEN_REDIRECT)
         const response = await this._exchangeCodeForToken(result, pkce)
         const profile = await this.oidcAPI.me(response.access_token)
         this.storage.setEmail(profile.email)
-        this.storage.setJWT(response.access_token)
+        this.storage.setJWT(response)
         return {
             email: profile.email,
             token: response
@@ -80,6 +92,16 @@ export default class DisplayableAuth {
 
     getEmail(): string | undefined {
         return this.storage.getEmail() || undefined
+    }
+
+    getProfile(): Profile | undefined {
+        const email = this.getEmail()
+        const token = this.storage.getJWT()
+        if (!email || !token) return undefined
+        return {
+            email,
+            token
+        }
     }
 
     isAuthenticated(): boolean {

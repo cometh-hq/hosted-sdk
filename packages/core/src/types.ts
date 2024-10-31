@@ -16,6 +16,7 @@ export interface MetaTransaction {
 export type ConnectParameters = {
 	chainIds: number[]
 	isReconnecting?: boolean | undefined
+	isLoggedIn?: boolean | undefined
 }
 
 export type SignableMessage =

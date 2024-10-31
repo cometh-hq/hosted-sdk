@@ -1,45 +1,32 @@
 import { DisplayMode, type WalletConfiguration } from '@/configuration'
-import { safeURL } from '@/utils/safeURLBuilder'
 import { type Wallet } from '@/core/app/types'
-import { OIDC_APP_URI, OIDC_URI } from '@/constants'
-import DisplayableWallet from '@/core/app/DisplayableWallet'
+import { OIDC_APP_URL, OIDC_URL } from '@/constants'
 import type { ConnectParameters } from '@/types'
 import DisplayableAuth from '@/core/app/DisplayableAuth'
+import HostedWallet from '@/core/HostedWallet'
 
-export default class HostedWallet {
-    wallet: DisplayableWallet
+export default class Hosted {
+    wallet: HostedWallet
     auth: DisplayableAuth
 
     constructor(apiKey: string, configuration: WalletConfiguration = {}, appChainIds: number[] = []) {
-        const oidcURI = new URL(configuration.oidcURI || OIDC_URI)
-        const oidcAppURI = configuration.oidcAppURI || OIDC_APP_URI
-        this.wallet = new DisplayableWallet(
-            DisplayMode.IFRAME,
-            {
-                authorizedOrigin: oidcURI.origin,
-                defaultURL: safeURL(oidcAppURI, `/iframe/wallet?client_id=${apiKey}`),
-                allowCreatePasskey: false,
-                allowGetPasskey: true
-            },
-            appChainIds.length > 0 ? appChainIds[0] : 1,
-            true
+        const oidcURL = configuration.oidcURL || OIDC_URL
+        const oidcAppURL = configuration.oidcAppURL || OIDC_APP_URL
+        this.wallet = new HostedWallet(
+            apiKey,
+            configuration,
+            appChainIds
         )
         this.auth = new DisplayableAuth(
             apiKey,
-            oidcURI.toString(),
-            oidcAppURI,
-            DisplayMode.POPUP,
-            {
-                authorizedOrigin: oidcURI.origin,
-                defaultURL: safeURL(oidcAppURI, `/auth?client_id=${apiKey}`),
-                allowCreatePasskey: true,
-                allowGetPasskey: true
-            }
+            oidcURL,
+            oidcAppURL,
+            DisplayMode.POPUP
         )
     }
 
     async login(parameters?: ConnectParameters): Promise<{ email: string } & Wallet> {
-        if (!this.auth.isAuthenticated()) {
+        if (!parameters?.isLoggedIn && !this.auth.isAuthenticated()) {
             await this.auth.login()
         }
         const wallet = await this.wallet.connect(parameters)
