@@ -26,9 +26,9 @@ export default class DisplayableAuth {
         this.oidcAPI = new OidcAPI(apiKey, oidcApiUrl, oidcAppUrl)
     }
 
-    private async _openDisplay(url: string): Promise<void> {
+    private async _openDisplay(url: string, waitForDisplay = true): Promise<void> {
         const reload = this.embedded.open(url)
-        if (reload) {
+        if (reload && waitForDisplay) {
             await this.waitActionResponse<void>(EventType.DISPLAY_READY, false)
         }
     }
@@ -62,7 +62,7 @@ export default class DisplayableAuth {
 
     private async _redirectToLogin(pkce: PKCEChallenge) {
         const url = this.oidcAPI.prepareAuthUrl(pkce)
-        await this._openDisplay(url)
+        await this._openDisplay(url, false)
     }
 
     async login(): Promise<Profile> {
@@ -72,10 +72,11 @@ export default class DisplayableAuth {
                 return profile
             }
         }
+        const authResultPromise = this.waitActionResponse<ResponseOAuthTokenRedirectDTO>(EventType.OAUTH_TOKEN_REDIRECT)
         const pkce = await getPkce()
         await this._redirectToLogin(pkce)
-        const result = await this.waitActionResponse<ResponseOAuthTokenRedirectDTO>(EventType.OAUTH_TOKEN_REDIRECT)
-        const response = await this._exchangeCodeForToken(result, pkce)
+        const authResult = await authResultPromise
+        const response = await this._exchangeCodeForToken(authResult, pkce)
         const profile = await this.oidcAPI.me(response.access_token)
         this.storage.setEmail(profile.email)
         this.storage.setJWT(response)

@@ -3,6 +3,9 @@ import type { OAuthTokenResponse, ProfileResponse } from './types'
 import { safeURL } from '@/utils/safeURLBuilder'
 import type { PKCEChallenge } from '@/utils/pkce'
 
+//TODO: put in config
+const authCallback = '/callback/auth'
+
 export default class OidcAPI {
 	private api: AxiosInstance
 
@@ -18,7 +21,7 @@ export default class OidcAPI {
 		params.append('client_id', this.apiKey)
 		params.append('code', code)
 		params.append('code_verifier', codeVerifier)
-		params.append('redirect_uri', safeURL(this.appUrl, '/embed/auth/callback'))
+		params.append('redirect_uri', safeURL(this.appUrl, authCallback))
 
 		try {
 			const response = await this.api.post('/token', params, {
@@ -35,7 +38,7 @@ export default class OidcAPI {
 		const params = new URLSearchParams()
 		params.append('response_type', 'code')
 		params.append('client_id', this.apiKey)
-		params.append('redirect_uri', safeURL(this.appUrl, '/embed/auth/callback'))
+		params.append('redirect_uri', safeURL(this.appUrl, authCallback))
 		params.append('scope', 'openid wallet email profile')
 		params.append('code_challenge', pkce.code_challenge)
 		params.append('code_challenge_method', pkce.method)
